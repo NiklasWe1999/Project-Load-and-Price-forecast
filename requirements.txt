@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+plotly
+xgboost
+scikit-learn
+joblib
+shap
+matplotlib
+statsmodels
+holidays
