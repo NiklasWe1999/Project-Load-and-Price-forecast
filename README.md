@@ -34,18 +34,31 @@ All timestamps are handled in UTC and converted to naive datetime objects for mo
 ---
 
 ## Project Structure
-├── app/ # Streamlit dashboard pages
+
+```python
+├── app/ #Streamlit
+│
+├── pages/
+│ ├── 1_Market_Overview.py
+│ ├── 2_Forecast_Load.py
+│ ├── 3_Forecast_Price.py
+│ └── 4_Modell_Diagnostic.py
 ├── data/
-│ └── processed/ # Engineered feature datasets
+│ ├── processed/# Engineered feature datasets
+│ └── raw/ # raw datasets
 ├── models/
 │ ├── load_model.pkl
 │ ├── price_model.pkl
 │ └── scalers/
 ├── notebooks/ # (reserved for future research notebook)
-├── src/ # Optional modular logic (if extended)
-├── requirements.txt
+├── src/
+│ ├── feature.py
+│ └── modeling/
+│  ├── predict.py 
+│  └── train.py
+├── enviroment.txt
 └── README.md
-
+```
 
 The `notebooks/` directory is reserved for a future research notebook containing deeper exploratory and modeling analysis.
 
