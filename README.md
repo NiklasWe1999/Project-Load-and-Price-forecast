@@ -1,74 +1,256 @@
-# Data Project Template
+# German Energy Market Dashboard & Forecasting
 
-<a target="_blank" href="https://datalumina.com/">
-    <img src="https://img.shields.io/badge/Datalumina-Project%20Template-2856f7" alt="Datalumina Project" />
-</a>
+## Overview
 
-## Cookiecutter Data Science
-This project template is a simplified version of the [Cookiecutter Data Science](https://cookiecutter-data-science.drivendata.org) template, created to suit the needs of Datalumina and made available as a GitHub template.
+This project develops an interactive dashboard and forecasting framework for the German electricity market. It combines historical load and price data with machine learning models to provide:
 
-## Adjusting .gitignore
+- Exploratory market analysis  
+- Short-term load forecasting (24h horizon)  
+- Short-term price forecasting (6h horizon)  
+- Model diagnostics and interpretability (SHAP)  
 
-Ensure you adjust the `.gitignore` file according to your project needs. For example, since this is a template, the `/data/` folder is commented out and data will not be exlucded from source control:
+Two XGBoost-based models are trained on engineered time-series features derived from historical German load and day-ahead price data.
 
-```plaintext
-# exclude data from source control by default
-# /data/
-```
+The project is implemented as a multi-page Streamlit dashboard.
 
-Typically, you want to exclude this folder if it contains either sensitive data that you do not want to add to version control or large files.
+---
 
-## Duplicating the .env File
-To set up your environment variables, you need to duplicate the `.env.example` file and rename it to `.env`. You can do this manually or using the following terminal command:
+## Data Source
+
+The data originates from:
+
+**Open Power System Data – Time Series Dataset**  
+https://data.open-power-system-data.org/time_series/2020-10-06
+
+Relevant variables include:
+
+- German electricity load (ENTSO-E transparency)  
+- Day-ahead electricity price (DE-LU)  
+- Weather variables (temperature, radiation)  
+- Renewable expectations (wind, solar)  
+
+All timestamps are handled in UTC and converted to naive datetime objects for modeling consistency.
+
+---
+
+## Project Structure
+├── app/ # Streamlit dashboard pages
+├── data/
+│ └── processed/ # Engineered feature datasets
+├── models/
+│ ├── load_model.pkl
+│ ├── price_model.pkl
+│ └── scalers/
+├── notebooks/ # (reserved for future research notebook)
+├── src/ # Optional modular logic (if extended)
+├── requirements.txt
+└── README.md
+
+
+The `notebooks/` directory is reserved for a future research notebook containing deeper exploratory and modeling analysis.
+
+---
+
+## Feature Engineering
+
+### Load Model Features
+
+The load forecasting model uses:
+
+- Calendar features (hour, weekday, month)  
+- Cyclical encodings (hour_sin, hour_cos)  
+- Seasonal indicators (is_winter, is_summer, is_holiday)  
+- Weather variables  
+- Lag features (1h to 336h)  
+- Rolling statistics (mean, std over 6h–24h)  
+- Load deltas  
+
+This allows the model to capture:
+
+- Intraday seasonality  
+- Weekly structure  
+- Medium-term dependencies  
+- Volatility dynamics  
+
+---
+
+### Price Model Features
+
+The price forecasting model includes:
+
+- Day-ahead price lags (1h–336h)  
+- Rolling price statistics  
+- Negative price indicators  
+- Residual load proxy  
+- Weather inputs  
+- Renewable generation expectations  
+- Calendar & cyclical features  
+- Load lag interaction terms  
+
+This reflects the structural coupling between residual load and price formation.
+
+---
+
+## Models
+
+Two separate models are trained:
+
+### 1. Load Forecast Model
+
+- Algorithm: XGBoost (multi-output structure)  
+- Forecast horizon: 24 hours  
+
+**Baselines:**
+- Naive (last observed value)  
+- Moving average (24h)  
+
+---
+
+### 2. Price Forecast Model
+
+- Algorithm: XGBoost  
+- Forecast horizon: 6 hours  
+
+**Baselines:**
+- Naive (last observed price)  
+- Moving average (24h)  
+
+---
+
+Both models use:
+
+- Feature scaling  
+- Stored preprocessing pipelines  
+- Persisted scalers and model bundles via joblib  
+
+---
+
+## Dashboard Components
+
+### 1. Market Overview
+
+- Historical load and price time series  
+- KPI metrics:
+  - Average load  
+  - Average price  
+  - Share of negative prices  
+  - Load–price correlation  
+- Hour × weekday heatmap  
+- Rolling correlation regime detection (168h window)  
+
+Regimes are classified into:
+
+- High coupling  
+- Mid regime  
+- Low coupling  
+
+---
+
+### 2. Load Forecast Page
+
+- 24h historical context  
+- 24h model forecast  
+- Baseline comparisons  
+- Realized future values (if available)  
+- MAE evaluation  
+- Peak comparison  
+
+---
+
+### 3. Price Forecast Page
+
+- 24h historical context  
+- 6h forward prediction  
+- Baseline comparison  
+- Realized values  
+- MAE evaluation  
+
+---
+
+### 4. Model Diagnostics
+
+- Feature importance (XGBoost)  
+- SHAP summary plot (TreeExplainer)  
+- Diagnostics based on recent valid timestamps  
+
+This allows interpretation of:
+
+- Dominant lag structures  
+- Weather influence  
+- Seasonal effects  
+- Structural drivers  
+
+---
+
+## Evaluation
+
+Model performance is evaluated using:
+
+- Mean Absolute Error (MAE)  
+- Baseline comparison  
+- Visual forecast inspection  
+- Regime-aware correlation analysis  
+
+The dashboard allows dynamic evaluation at arbitrary historical timestamps.
+
+---
+
+## Installation
+
+Clone the repository:
 
 ```bash
-cp .env.example .env # Linux, macOS, Git Bash, WSL
-copy .env.example .env # Windows Command Prompt
+git clone <your-repository-url>
+cd <repository-name>
+```
+Install dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-This command creates a copy of `.env.example` and names it `.env`, allowing you to configure your environment variables specific to your setup.
-
-
-## Project Organization
-
+Run the dashboard:
+```bash
+streamlit run app/main.py
 ```
-├── LICENSE            <- Open-source license if one is chosen
-├── README.md          <- The top-level README for developers using this project
-├── data
-│   ├── external       <- Data from third party sources
-│   ├── interim        <- Intermediate data that has been transformed
-│   ├── processed      <- The final, canonical data sets for modeling
-│   └── raw            <- The original, immutable data dump
-│
-├── models             <- Trained and serialized models, model predictions, or model summaries
-│
-├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`
-│
-├── references         <- Data dictionaries, manuals, and all other explanatory materials
-│
-├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
-│
-└── src                         <- Source code for this project
-    │
-    ├── __init__.py             <- Makes src a Python module
-    │
-    ├── config.py               <- Store useful variables and configuration
-    │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
-    ├── features.py             <- Code to create features for modeling
-    │
-    │    
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
-    │
-    ├── plots.py                <- Code to create visualizations 
-    │
-    └── services                <- Service classes to connect with external platforms, tools, or APIs
-        └── __init__.py 
-```
+
+## Future work:
+
+Planned extensions include:
+
+- Dedicated research notebook with deeper statistical analysis
+
+- Hyperparameter optimization comparison
+
+- Probabilistic forecasting / uncertainty bands
+
+- Scenario simulation (load shocks, renewable penetration shifts)
+
+- Residual diagnostics & stability tests
+
+- The notebook section will provide a more research-oriented exploration of the modeling pipeline.
+
+## Limitations
+
+- Deterministic forecasts only (no probabilistic intervals)
+
+- No exogenous forecast uncertainty modeling
+
+- Feature engineering is static and not dynamically updated
+
+- Structural market regime changes are not explicitly modeled
+
+## Techstak
+
+- Python
+
+- Streamlit
+
+- XGBoost
+
+- SHAP
+
+- Plotly
+
+- Pandas / NumPy
+
+- Scikit-learn
