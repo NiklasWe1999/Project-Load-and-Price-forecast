@@ -9,9 +9,11 @@ This project develops an interactive dashboard and forecasting framework for the
 - Short-term price forecasting (6h horizon)  
 - Model diagnostics and interpretability (SHAP)  
 
-Two XGBoost-based models are trained on engineered time-series features derived from historical German load and day-ahead price data.
+Two XGBoost-based models are trained on engineered time-series features derived from historical German load and day-ahead price data and weather data.
 
 The project is implemented as a multi-page Streamlit dashboard.
+
+Acess the dashboard and try it out: LINK
 
 ---
 
@@ -20,7 +22,10 @@ The project is implemented as a multi-page Streamlit dashboard.
 The data originates from:
 
 **Open Power System Data – Time Series Dataset**  
-https://data.open-power-system-data.org/time_series/2020-10-06
+https://data.open-power-system-data.org/time_series/
+
+**Open Power System Data – weather_data**  
+https://data.open-power-system-data.org/weather_data/
 
 Relevant variables include:
 
@@ -30,6 +35,8 @@ Relevant variables include:
 - Renewable expectations (wind, solar)  
 
 All timestamps are handled in UTC and converted to naive datetime objects for modeling consistency.
+
+The data span over the time from 01.01.2015 to 31.12.2019, but the prices where only available from 14.10.2018 to 31.12.2019
 
 ---
 
@@ -52,7 +59,7 @@ All timestamps are handled in UTC and converted to naive datetime objects for mo
 │ └── scalers/
 ├── notebooks/ # (reserved for future research notebook)
 ├── src/
-│ ├── feature.py
+│ ├── feature.py # feature engineering
 │ └── modeling/
 │  ├── predict.py 
 │  └── train.py
@@ -73,7 +80,7 @@ The load forecasting model uses:
 - Calendar features (hour, weekday, month)  
 - Cyclical encodings (hour_sin, hour_cos)  
 - Seasonal indicators (is_winter, is_summer, is_holiday)  
-- Weather variables  
+- Weather inputs  
 - Lag features (1h to 336h)  
 - Rolling statistics (mean, std over 6h–24h)  
 - Load deltas  
@@ -111,6 +118,7 @@ Two separate models are trained:
 ### 1. Load Forecast Model
 
 - Algorithm: XGBoost (multi-output structure)  
+- Input horizon: 24 hours
 - Forecast horizon: 24 hours  
 
 **Baselines:**
@@ -122,6 +130,7 @@ Two separate models are trained:
 ### 2. Price Forecast Model
 
 - Algorithm: XGBoost  
+- Input horizon: 24 hours
 - Forecast horizon: 6 hours  
 
 **Baselines:**
