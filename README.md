@@ -13,7 +13,7 @@ The application combines historical load, day-ahead price, and weather data with
 
 Two XGBoost models are trained on engineered time-series features, including lag structures, rolling statistics, and seasonal encodings.
 
-The primary objective of this project is to demonstrate an end-to-end data science workflow — from feature engineering and model development to interactive visualization and deployment.
+The primary objective of this project is to demonstrate an end-to-end data science workflow. Starting from feature engineering and model development to interactive visualization and deployment.
 
 ---
 
@@ -241,8 +241,8 @@ These timestamps are strictly out-of-sample and were not included in the trainin
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
-cd <repository-name>
+git clone https://github.com/NiklasWe1999/Project-Load-and-Price-forecast.git
+cd Project-Load-and-Price-forecast
 ```
 Install dependencies:
 ```bash
