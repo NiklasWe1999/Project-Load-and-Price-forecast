@@ -71,13 +71,22 @@ def load_models():
 model_load_bundle, model_price_bundle = load_models()
 scaler_X_load = joblib.load(SCALER_X_LOAD)
 scaler_y_load = joblib.load(SCALER_Y_LOAD)
+min_ts = pd.Timestamp("2019-10-31 12:00:00")
+max_ts = df_price["utc_timestamp"].max()
+min_valid_ts = min_ts
+max_valid_ts = max_ts - pd.Timedelta(hours=24)
 
 # ----------------------------
 # Sidebar / Einstellungen
 # ----------------------------
 with st.sidebar:
     st.header("Settings")
-    sel_date = st.date_input("Date", value=pd.to_datetime("2019-10-01"))
+    sel_date = st.date_input(
+        "Date",
+        value="2019-11-14 12:00:00",
+        min_value=min_valid_ts.date(),
+        max_value=max_valid_ts.date(),
+    )
     sel_hour = st.slider("hour", 0, 23, 12)
     # horizon = st.selectbox("Forecast-Horizont", [6, 24], index=1)
     # st.markdown("---")
@@ -214,17 +223,44 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------
+# MAE berechnen
+# ----------------------------
+if len(y_real) > 0:
+    y_pred = y_xgb[: len(y_real)]
+    y_naive_cut = y_naive[: len(y_real)]
+    y_ma_cut = y_ma[: len(y_real)]
+
+    mae_model = np.mean(np.abs(y_pred - y_real))
+    mae_naive = np.mean(np.abs(y_naive_cut - y_real))
+    mae_ma = np.mean(np.abs(y_ma_cut - y_real))
+
+    improvement_naive = (mae_naive - mae_model) / mae_naive * 100
+    improvement_ma = (mae_ma - mae_model) / mae_ma * 100
+else:
+    mae_model = mae_naive = mae_ma = None
+    improvement_naive = improvement_ma = None
+
+# ----------------------------
 # Kennzahlen
 # ----------------------------
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Last value", f"{last_val:.2f} MW")
-c2.metric(
-    "Forecast peak", f"{y_xgb.max():.2f} MW", delta=f"{y_xgb.max() - last_val:.2f}"
-)
-if len(y_real) > 0:
-    real_peak = y_real.max()
-    c3.metric("Real Peak", f"{real_peak:.2f} MW", delta=f"{real_peak - last_val:.2f}")
+if improvement_naive is not None:
+    c2.metric(
+        "Improvement vs Naive",
+        f"{improvement_naive:.1f} %",
+        delta=f"MAE {mae_model:.2f} vs {mae_naive:.2f}",
+    )
 else:
-    c3.metric("Real Peak", "N/A", delta="N/A")
+    c2.metric("Improvement vs Naive", "N/A")
+
+if improvement_ma is not None:
+    c3.metric(
+        "Improvement vs Moving Avg",
+        f"{improvement_ma:.1f} %",
+        delta=f"MAE {mae_model:.2f} vs {mae_ma:.2f}",
+    )
+else:
+    c3.metric("Improvement vs Moving Avg", "N/A")
 
 c4.metric("Mean-Absolute-Error Forecast", f"{mae:.2f} MW" if mae is not None else "N/A")

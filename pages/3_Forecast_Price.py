@@ -44,7 +44,7 @@ def get_processed_sequence(df, model_features, dt):
 # =========================
 # App
 # =========================
-st.title("Electricity Price Forecast (24h → 6h)")
+st.title("Energy Live Forecast")
 
 df_price = load_data()
 
@@ -124,13 +124,22 @@ real_x = list(range(1, len(y_real) + 1))
 
 
 # =========================
-# MAE
+# MAE und Baseline Vergleich
 # =========================
 if len(y_real) > 0:
-    mae = np.mean(np.abs(y_pred[: len(y_real)] - y_real))
-else:
-    mae = None
+    y_pred_cut = y_pred[: len(y_real)]
+    y_naive_cut = y_naive[: len(y_real)]
+    y_ma_cut = y_ma[: len(y_real)]
 
+    mae_model = np.mean(np.abs(y_pred_cut - y_real))
+    mae_naive = np.mean(np.abs(y_naive_cut - y_real))
+    mae_ma = np.mean(np.abs(y_ma_cut - y_real))
+
+    improvement_naive = (mae_naive - mae_model) / mae_naive * 100
+    improvement_ma = (mae_ma - mae_model) / mae_ma * 100
+else:
+    mae_model = mae_naive = mae_ma = None
+    improvement_naive = improvement_ma = None
 
 # =========================
 # Plot
@@ -216,23 +225,26 @@ st.plotly_chart(fig, use_container_width=True)
 c1, c2, c3, c4 = st.columns(4)
 
 c1.metric("Last price", f"{last_val:.2f} €/MWh")
-c2.metric(
-    "Forecast peak",
-    f"{y_pred.max():.2f} €/MWh",
-    delta=f"{y_pred.max() - last_val:.2f}",
-)
 
-if len(y_real) > 0:
-    real_peak = y_real.max()
-    c3.metric(
-        "Real Peak",
-        f"{real_peak:.2f} €/MWh",
-        delta=f"{real_peak - last_val:.2f}",
+if improvement_naive is not None:
+    c2.metric(
+        "Improvement vs Naive",
+        f"{improvement_naive:.1f} %",
+        delta=f"MAE {mae_model:.2f} vs {mae_naive:.2f}",
     )
 else:
-    c3.metric("Real Peak", "N/A", delta="N/A")
+    c2.metric("Improvement vs Naive", "N/A")
+
+if improvement_ma is not None:
+    c3.metric(
+        "Improvement vs Moving Avg",
+        f"{improvement_ma:.1f} %",
+        delta=f"MAE {mae_model:.2f} vs {mae_ma:.2f}",
+    )
+else:
+    c3.metric("Improvement vs Moving Avg", "N/A")
 
 c4.metric(
-    "Mean Absolute Error",
-    f"{mae:.2f} €/MWh" if mae is not None else "N/A",
+    "Mean-Absolute-Error Forecast",
+    f"{mae_model:.2f} €/MWh" if mae_model is not None else "N/A",
 )
