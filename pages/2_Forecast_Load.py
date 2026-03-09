@@ -119,20 +119,20 @@ y_xgb = y_xgb[:horizon]
 y_naive = np.full(horizon, last_val)
 y_ma = np.full(horizon, moving_avg)
 
-# Realer Verlauf nach dt
+
 real_future = df_load[df_load["utc_timestamp"] > dt].head(horizon)
 y_real = real_future["DE_load_actual_entsoe_transparency"].values
 real_x = list(range(1, len(y_real) + 1))
 
 # ----------------------------
-# MAE berechnen
+# MAE
 # ----------------------------
 if len(y_real) > 0:  # Sicherstellen, dass reale Werte vorhanden sind
     mae = np.mean(np.abs(y_xgb[: len(y_real)] - y_real))
 else:
     mae = None
 # ----------------------------
-# Plot mit Plotly (Dark Mode freundlich)
+# Plot mit Plotly
 # ----------------------------
 fig = go.Figure()
 
@@ -223,7 +223,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------
-# MAE berechnen
+# MAE
 # ----------------------------
 if len(y_real) > 0:
     y_pred = y_xgb[: len(y_real)]
@@ -241,7 +241,7 @@ else:
     improvement_naive = improvement_ma = None
 
 # ----------------------------
-# Kennzahlen
+# KPIs
 # ----------------------------
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Last value", f"{last_val:.2f} MW")

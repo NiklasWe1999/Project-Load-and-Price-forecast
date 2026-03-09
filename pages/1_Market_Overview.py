@@ -167,7 +167,7 @@ st.plotly_chart(fig_heat, use_container_width=True)
 
 
 # ==========================================================
-# 3) Rolling Correlation (72h) + Quantile Regime
+# 3) Rolling Correlation (168h) + Quantile Regime
 # ==========================================================
 
 st.subheader("Rolling Correlation (168h) with Quantile Regime")
@@ -188,10 +188,10 @@ df["regime"] = "Mid"
 df.loc[df["rolling_corr"] >= upper, "regime"] = "High Coupling"
 df.loc[df["rolling_corr"] <= lower, "regime"] = "Low Coupling"
 
-# Farben pro Regime
+
 regime_colors = {"High Coupling": "green", "Mid": "grey", "Low Coupling": "red"}
 
-# Linie segmentweise nach Regime färben + Legende nur einmal pro Regime
+
 fig_rc = go.Figure()
 start_idx = 0
 legend_used = {r: False for r in regime_colors.keys()}

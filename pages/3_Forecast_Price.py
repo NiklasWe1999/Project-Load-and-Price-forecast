@@ -115,9 +115,6 @@ y_naive = np.full(HORIZON, last_val)
 y_ma = np.full(HORIZON, moving_avg)
 
 
-# =========================
-# Realer Verlauf nach dt
-# =========================
 real_future = df_price[df_price["utc_timestamp"] > dt].head(HORIZON)
 y_real = real_future["DE_LU_price_day_ahead"].values
 real_x = list(range(1, len(y_real) + 1))
